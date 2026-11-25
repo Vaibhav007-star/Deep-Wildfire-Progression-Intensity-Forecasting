@@ -3,9 +3,16 @@
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple
 import numpy as np
-import rasterio
-from rasterio.transform import from_bounds
-from rasterio.enums import Resampling
+try:
+    import rasterio
+    from rasterio.transform import from_bounds
+    from rasterio.enums import Resampling
+    HAS_RASTERIO = True
+except ImportError:
+    HAS_RASTERIO = False
+    rasterio = None
+    from_bounds = None
+    Resampling = None
 import torch
 
 from utils.logger import get_logger
@@ -22,6 +29,8 @@ class RasterProcessor:
 
     def load_geotiff(self, filepath: Path | str) -> Tuple[np.ndarray, Dict[str, Any]]:
         """Reads a GeoTIFF raster file with metadata preservation."""
+        if not HAS_RASTERIO:
+            raise RuntimeError("Rasterio not available on this platform.")
         filepath = Path(filepath)
         if not filepath.exists():
             raise FileNotFoundError(f"Raster file not found: {filepath}")
